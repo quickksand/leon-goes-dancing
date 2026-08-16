@@ -1,0 +1,14 @@
+{
+  "name": "leon-goes-dancing",
+  "version": "1.0.0",
+  "description": "Event-Tracking als Single-File-Web-App mit GitHub-Repo als Datenhaltung",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node test/app.test.mjs",
+    "start": "node -e \"import('node:http').then(({createServer})=>import('node:fs').then(({readFileSync})=>createServer((_,r)=>{r.writeHead(200,{'Content-Type':'text/html; charset=utf-8'});r.end(readFileSync('index.html'))}).listen(8080,()=>console.log('http://127.0.0.1:8080'))))\""
+  },
+  "devDependencies": {
+    "playwright": "^1.56.0"
+  }
+}

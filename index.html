@@ -1,0 +1,1184 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>leon goes dancing</title>
+<style>
+  :root {
+    --bg: #fbfaf9;
+    --surface: #ffffff;
+    --surface-2: #f2f0ee;
+    --line: #e3dfdb;
+    --text: #1d1b19;
+    --muted: #6f6862;
+    --accent: #b4471f;
+    --accent-soft: #f6e7e0;
+    --shadow: 0 1px 2px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.05);
+    --radius: 12px;
+
+    --s-entdeckt: #8a827a;
+    --s-interessiert: #c98a12;
+    --s-geht-fix: #2f6fb0;
+    --s-ticket-gekauft: #2e7d4f;
+    --s-besucht: #7a5aa8;
+    --s-verpasst: #b34141;
+    --s-verworfen: #9a938c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161512;
+      --surface: #201e1a;
+      --surface-2: #2a2723;
+      --line: #37332e;
+      --text: #eee9e3;
+      --muted: #a49b92;
+      --accent: #e8794a;
+      --accent-soft: #3a2419;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
+
+      --s-entdeckt: #9b938a;
+      --s-interessiert: #e0a93b;
+      --s-geht-fix: #6ba3dd;
+      --s-ticket-gekauft: #5fb783;
+      --s-besucht: #a688d4;
+      --s-verpasst: #e07777;
+      --s-verworfen: #7d766f;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    -webkit-text-size-adjust: 100%;
+    padding-bottom: 6rem;
+  }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+
+  /* ---------- Kopf ---------- */
+  header {
+    position: sticky; top: 0; z-index: 20;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+    padding: .6rem max(.8rem, env(safe-area-inset-left)) .5rem;
+  }
+  .bar { display: flex; align-items: center; gap: .6rem; }
+  .brand {
+    font-weight: 650; letter-spacing: -.01em; font-size: 1.02rem;
+    margin-right: auto; white-space: nowrap;
+  }
+  .icon-btn {
+    background: var(--surface); border: 1px solid var(--line); color: var(--text);
+    border-radius: 9px; padding: .38rem .6rem; font-size: .82rem; line-height: 1.2;
+    white-space: nowrap;
+  }
+  .icon-btn:hover { background: var(--surface-2); }
+  .icon-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+
+  #sync { font-size: .74rem; color: var(--muted); white-space: nowrap; }
+  #sync.err { color: var(--s-verpasst); }
+  #sync.ok { color: var(--s-ticket-gekauft); }
+
+  /* ---------- Filter ---------- */
+  .filters { display: flex; flex-direction: column; gap: .45rem; margin-top: .55rem; }
+  .row { display: flex; gap: .4rem; align-items: center; }
+  #q {
+    flex: 1; min-width: 0; background: var(--surface); border: 1px solid var(--line);
+    border-radius: 9px; padding: .45rem .6rem;
+  }
+  #q:focus, .field input:focus, .field select:focus, .field textarea:focus {
+    outline: 2px solid var(--accent); outline-offset: -1px;
+  }
+  .chips { display: flex; gap: .35rem; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip {
+    border: 1px solid var(--line); background: var(--surface); border-radius: 999px;
+    padding: .22rem .6rem; font-size: .78rem; white-space: nowrap; color: var(--muted);
+  }
+  .chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--text); font-weight: 550; }
+  .chip .dot { display: inline-block; width: .5em; height: .5em; border-radius: 50%; margin-right: .35em; vertical-align: baseline; }
+
+  /* ---------- Liste ---------- */
+  main { padding: .8rem max(.8rem, env(safe-area-inset-left)); max-width: 780px; margin: 0 auto; }
+  #count { font-size: .74rem; color: var(--muted); text-align: right; margin: -.3rem .2rem .5rem; }
+  .month { font-size: .76rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 1.1rem .2rem .4rem; }
+  .month:first-child { margin-top: 0; }
+  .card {
+    width: 100%; text-align: left; display: grid; grid-template-columns: 3.6rem 1fr; gap: .1rem .7rem;
+    background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--st, var(--line));
+    border-radius: var(--radius); padding: .6rem .75rem; margin-bottom: .45rem; box-shadow: var(--shadow);
+  }
+  .card:hover { border-color: var(--accent); }
+  .card .when { grid-row: span 2; font-variant-numeric: tabular-nums; line-height: 1.15; padding-top: .1rem; }
+  .card .when b { display: block; font-size: 1.15rem; font-weight: 600; }
+  .card .when span { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .card .titel { font-weight: 600; letter-spacing: -.005em; }
+  .card .meta { font-size: .8rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: .1rem .5rem; }
+  .card .meta .tag { color: var(--accent); }
+  .card.past { opacity: .62; }
+  .badge {
+    font-size: .68rem; padding: .05rem .4rem; border-radius: 999px; white-space: nowrap;
+    background: color-mix(in srgb, var(--st) 16%, transparent); color: var(--st); font-weight: 600;
+  }
+  .empty { text-align: center; color: var(--muted); padding: 3rem 1rem; }
+  .empty h2 { font-size: 1rem; color: var(--text); margin: 0 0 .3rem; }
+
+  /* ---------- FAB ---------- */
+  .fab {
+    position: fixed; right: max(1rem, env(safe-area-inset-right));
+    bottom: calc(1.1rem + env(safe-area-inset-bottom)); z-index: 30;
+    background: var(--accent); color: #fff; border: none; border-radius: 999px;
+    padding: .85rem 1.25rem; font-size: .95rem; font-weight: 650;
+    box-shadow: 0 6px 20px rgba(0,0,0,.25);
+  }
+
+  /* ---------- Dialoge ---------- */
+  dialog {
+    border: none; padding: 0; background: transparent; color: var(--text);
+    width: 100%; max-width: 560px; margin: auto auto 0; max-height: 92dvh;
+  }
+  @media (min-width: 640px) { dialog { margin: auto; } }
+  dialog::backdrop { background: rgba(0,0,0,.45); backdrop-filter: blur(2px); }
+  .sheet {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 16px 16px 0 0; box-shadow: var(--shadow);
+    max-height: 92dvh; display: flex; flex-direction: column;
+  }
+  @media (min-width: 640px) { .sheet { border-radius: 16px; } }
+  .sheet > header {
+    position: static; background: none; backdrop-filter: none;
+    display: flex; align-items: center; gap: .6rem; padding: .8rem 1rem;
+  }
+  .sheet > header h2 { font-size: 1rem; margin: 0; margin-right: auto; }
+  .sheet .body { overflow-y: auto; padding: 0 1rem 1rem; -webkit-overflow-scrolling: touch; }
+  .sheet .foot {
+    display: flex; gap: .5rem; padding: .75rem 1rem calc(.75rem + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line); background: var(--surface-2);
+    border-radius: 0 0 16px 16px;
+  }
+  .sheet .foot .icon-btn { flex: 1; padding: .6rem; text-align: center; }
+  .field { display: block; margin-bottom: .7rem; }
+  .field > span { display: block; font-size: .76rem; color: var(--muted); margin-bottom: .2rem; letter-spacing: .01em; }
+  .field input, .field select, .field textarea {
+    width: 100%; background: var(--bg); border: 1px solid var(--line);
+    border-radius: 9px; padding: .5rem .6rem;
+  }
+  .field textarea { resize: vertical; min-height: 3.2rem; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
+  .grid2 .field { margin-bottom: 0; }
+  details.more { margin: .3rem 0 .8rem; }
+  details.more > summary {
+    cursor: pointer; font-size: .82rem; color: var(--accent); padding: .35rem 0;
+    list-style: none; user-select: none;
+  }
+  details.more > summary::-webkit-details-marker { display: none; }
+  details.more > summary::before { content: "▸ "; }
+  details.more[open] > summary::before { content: "▾ "; }
+  .statusrow { display: flex; flex-wrap: wrap; gap: .35rem; margin: .2rem 0 .9rem; }
+  .hint { font-size: .78rem; color: var(--muted); margin: .1rem 0 .8rem; }
+  .hint code { background: var(--surface-2); padding: .05rem .3rem; border-radius: 4px; font-size: .92em; }
+  .danger { color: var(--s-verpasst); border-color: color-mix(in srgb, var(--s-verpasst) 40%, var(--line)); }
+  .banner {
+    background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 9px;
+    padding: .5rem .7rem; font-size: .82rem; margin-bottom: .8rem;
+  }
+  .taglist { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .35rem; }
+  .taglist button { font-size: .74rem; padding: .12rem .5rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="bar">
+    <div class="brand">leon goes dancing</div>
+    <span id="sync"></span>
+    <button class="icon-btn" id="btnIcsAll" title="Gefilterte Events als Kalenderdatei">ICS</button>
+    <button class="icon-btn" id="btnSettings" title="Einstellungen">⚙</button>
+  </div>
+  <div class="filters">
+    <div class="row">
+      <input id="q" type="search" placeholder="Suchen — Titel, Ort, Tag, Notiz …" autocomplete="off">
+      <select id="zeit" class="icon-btn" style="padding:.4rem">
+        <option value="kommend">kommend</option>
+        <option value="vergangen">vergangen</option>
+        <option value="alle">alle</option>
+      </select>
+    </div>
+    <div class="chips" id="statusChips"></div>
+    <div class="chips" id="tagChips"></div>
+  </div>
+</header>
+
+<main>
+  <div id="count"></div>
+  <div id="list"></div>
+</main>
+
+<button class="fab" id="btnNew">+ Erfassen</button>
+
+<!-- Event-Formular -->
+<dialog id="dlgEvent">
+  <form class="sheet" method="dialog" id="formEvent">
+    <header>
+      <h2 id="evTitle">Neues Event</h2>
+      <button type="button" class="icon-btn" data-close>Abbrechen</button>
+    </header>
+    <div class="body">
+      <div class="statusrow" id="evStatus"></div>
+
+      <label class="field">
+        <span>Titel — Künstler, Party, Festival *</span>
+        <input name="titel" required autocomplete="off" enterkeyhint="done">
+      </label>
+
+      <div class="grid2" style="margin-bottom:.7rem">
+        <label class="field">
+          <span>Stadt</span>
+          <input name="stadt" autocomplete="off" list="staedte">
+        </label>
+        <label class="field">
+          <span>Datum</span>
+          <input name="startDate" type="date">
+        </label>
+      </div>
+
+      <label class="field">
+        <span>Tags — Komma-getrennt</span>
+        <input name="tags" autocomplete="off" placeholder="indie, techno, festival">
+        <div class="taglist" id="tagSuggest"></div>
+      </label>
+
+      <details class="more" id="moreBox">
+        <summary>Anreichern — Uhrzeit, Ende, Preis, VVK, Quelle</summary>
+
+        <div class="grid2" style="margin-bottom:.7rem">
+          <label class="field">
+            <span>Beginn (Uhrzeit)</span>
+            <input name="startTime" type="time">
+          </label>
+          <label class="field">
+            <span>Ende (mehrtägig)</span>
+            <input name="endDate" type="date">
+          </label>
+        </div>
+
+        <div class="grid2" style="margin-bottom:.7rem">
+          <label class="field">
+            <span>Venue</span>
+            <input name="venue" autocomplete="off" list="venues">
+          </label>
+          <label class="field">
+            <span>Preis (€)</span>
+            <input name="preis" type="number" step="0.01" min="0" inputmode="decimal">
+          </label>
+        </div>
+
+        <label class="field">
+          <span>VVK-Start — landet als Kalendereintrag im ICS</span>
+          <input name="vvkStart" type="datetime-local">
+        </label>
+
+        <label class="field">
+          <span>Quelle — Alert, Plakat, Tipp von …</span>
+          <input name="quelle" autocomplete="off">
+        </label>
+
+        <label class="field">
+          <span>Parkgrund — warum hängt es bei „interessiert"?</span>
+          <input name="parkgrund" autocomplete="off">
+        </label>
+
+        <label class="field">
+          <span>Notiz</span>
+          <textarea name="notiz" rows="2"></textarea>
+        </label>
+      </details>
+
+      <div class="hint" id="evFooterInfo"></div>
+    </div>
+    <div class="foot" id="evFoot">
+      <button type="button" class="icon-btn danger" id="btnDelete" hidden>Löschen</button>
+      <button type="button" class="icon-btn" id="btnCopy" hidden>Text kopieren</button>
+      <button type="button" class="icon-btn" id="btnIcs" hidden>ICS</button>
+      <button type="submit" class="icon-btn primary" id="btnSave">Sichern</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Einstellungen -->
+<dialog id="dlgSettings">
+  <form class="sheet" method="dialog" id="formSettings">
+    <header>
+      <h2>Einstellungen</h2>
+      <button type="button" class="icon-btn" data-close>Schließen</button>
+    </header>
+    <div class="body">
+      <p class="hint">
+        Die Daten liegen als <code>events.json</code> in einem <b>privaten</b> Repo (ADR 0002).
+        Das fine-grained Token braucht dort <i>Contents: Read and write</i> — und sonst nichts.
+        Es bleibt in diesem Browser (localStorage) und wird nie committet.
+      </p>
+      <div class="grid2" style="margin-bottom:.7rem">
+        <label class="field"><span>Owner</span><input name="owner" placeholder="quickksand" autocapitalize="off" autocomplete="off"></label>
+        <label class="field"><span>Daten-Repo</span><input name="repo" placeholder="leon-goes-dancing-data" autocapitalize="off" autocomplete="off"></label>
+      </div>
+      <div class="grid2" style="margin-bottom:.7rem">
+        <label class="field"><span>Pfad</span><input name="path" placeholder="events.json" autocapitalize="off" autocomplete="off"></label>
+        <label class="field"><span>Branch</span><input name="branch" placeholder="main" autocapitalize="off" autocomplete="off"></label>
+      </div>
+      <label class="field">
+        <span>Token (github_pat_…)</span>
+        <input name="token" type="password" autocomplete="off" spellcheck="false">
+      </label>
+      <div class="hint" id="cacheInfo"></div>
+    </div>
+    <div class="foot">
+      <button type="button" class="icon-btn danger" id="btnForget">Token löschen</button>
+      <button type="submit" class="icon-btn primary">Speichern &amp; laden</button>
+    </div>
+  </form>
+</dialog>
+
+<datalist id="staedte"></datalist>
+<datalist id="venues"></datalist>
+
+<script>
+"use strict";
+
+/* ============================================================
+   Modell — Begriffe nach CONTEXT.md
+   ============================================================ */
+
+const STATUSES = [
+  { id: "entdeckt",       label: "entdeckt",       aktiv: true  },
+  { id: "interessiert",   label: "interessiert",   aktiv: true  },
+  { id: "geht-fix",       label: "geht fix",       aktiv: true  },
+  { id: "ticket-gekauft", label: "Ticket gekauft", aktiv: true  },
+  { id: "besucht",        label: "besucht",        aktiv: false },
+  { id: "verpasst",       label: "verpasst",       aktiv: false },
+  { id: "verworfen",      label: "verworfen",      aktiv: false },
+];
+const STATUS_IDS = STATUSES.map(s => s.id);
+const AKTIVE_STATUS = STATUSES.filter(s => s.aktiv).map(s => s.id);
+
+const CFG_KEY = "lgd.cfg";
+const CACHE_KEY = "lgd.cache";
+const FILTER_KEY = "lgd.filter";
+
+let cfg = { owner: "", repo: "", path: "events.json", branch: "main", token: "" };
+const state = {
+  events: [],
+  sha: null,
+  geladenAm: null,
+  offline: false,
+  editId: null,
+};
+const filter = { q: "", zeit: "kommend", status: [...AKTIVE_STATUS], tags: [] };
+
+/* ============================================================
+   Hilfen
+   ============================================================ */
+
+const $  = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+const heute = () => new Date().toISOString().slice(0, 10);
+const uid = () => "ev_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 7);
+
+// Datum/Zeit werden als "YYYY-MM-DD" oder "YYYY-MM-DDTHH:MM" gehalten — lokale Wandzeit,
+// bewusst ohne Zeitzone: ein Konzert um 20 Uhr ist um 20 Uhr, egal von wo man draufschaut.
+const splitDT = s => { const [d = "", t = ""] = String(s || "").split("T"); return { d, t: t.slice(0, 5) }; };
+const joinDT  = (d, t) => (d ? (t ? d + "T" + t : d) : "");
+const datePart = s => splitDT(s).d;
+
+function addDays(dstr, n) {
+  const [y, m, d] = dstr.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d + n));
+  return dt.toISOString().slice(0, 10);
+}
+
+const WT = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+const MON = ["Januar", "Februar", "März", "April", "Mai", "Juni",
+             "Juli", "August", "September", "Oktober", "November", "Dezember"];
+
+function parseLocal(s) {
+  if (!s) return null;
+  const { d, t } = splitDT(s);
+  const [y, m, dd] = d.split("-").map(Number);
+  const [hh = 0, mi = 0] = t ? t.split(":").map(Number) : [];
+  if (!y || !m || !dd) return null;
+  return new Date(y, m - 1, dd, hh, mi);
+}
+
+function fmtLang(s) {
+  const dt = parseLocal(s);
+  if (!dt) return "ohne Datum";
+  const { d, t } = splitDT(s);
+  const [, m, dd] = d.split("-").map(Number);
+  const base = `${WT[dt.getDay()]}, ${dd}. ${MON[m - 1]} ${d.slice(0, 4)}`;
+  return t ? `${base}, ${t} Uhr` : base;
+}
+
+function fmtPreis(p) {
+  if (p === null || p === undefined || p === "") return "";
+  const n = Number(p);
+  if (!isFinite(n)) return "";
+  return (Number.isInteger(n) ? n : n.toFixed(2).replace(".", ",")) + " €";
+}
+
+/** Endtag eines Events — bei mehrtägigen Events das Ende, sonst der Starttag. */
+const endTag = ev => datePart(ev.ende) || datePart(ev.start);
+
+/** Vergangen = der letzte Tag liegt vor heute. Events ohne Datum sind nie vergangen. */
+const istVergangen = ev => { const e = endTag(ev); return !!e && e < heute(); };
+
+/* ============================================================
+   Speicher — Konfiguration und lokaler Cache (ADR 0002: lesender Fallback)
+   ============================================================ */
+
+function ladeCfg() {
+  try { cfg = { ...cfg, ...JSON.parse(localStorage.getItem(CFG_KEY) || "{}") }; } catch {}
+  try { Object.assign(filter, JSON.parse(localStorage.getItem(FILTER_KEY) || "{}")); } catch {}
+}
+const sichereCfg  = () => localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
+const sichereFilter = () => localStorage.setItem(FILTER_KEY, JSON.stringify(filter));
+
+function schreibeCache() {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({
+      events: state.events, sha: state.sha, geladenAm: new Date().toISOString(),
+    }));
+  } catch {}
+}
+function ladeCache() {
+  try {
+    const c = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
+    if (!c) return false;
+    state.events = c.events || [];
+    state.sha = c.sha || null;
+    state.geladenAm = c.geladenAm || null;
+    return true;
+  } catch { return false; }
+}
+
+/* ============================================================
+   GitHub Contents API
+   ============================================================ */
+
+const konfiguriert = () => !!(cfg.token && cfg.owner && cfg.repo && cfg.path);
+const repoUrl = pfad =>
+  `https://api.github.com/repos/${encodeURIComponent(cfg.owner)}/${encodeURIComponent(cfg.repo)}` +
+  `/contents/${pfad.split("/").map(encodeURIComponent).join("/")}`;
+const contentsUrl = () => repoUrl(cfg.path);
+
+/** Inbox-Ordner neben events.json — dort legt der iOS-Kurzbefehl seine Captures ab. */
+const inboxDir = () => { const p = cfg.path.split("/"); p.pop(); return [...p, "inbox"].join("/"); };
+
+function b64encode(str) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin);
+}
+function b64decode(b64) {
+  const bin = atob(String(b64).replace(/\s/g, ""));
+  return new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0)));
+}
+
+async function api(url, opts = {}) {
+  const res = await fetch(url, {
+    ...opts,
+    headers: {
+      "Accept": "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28",
+      "Authorization": "Bearer " + cfg.token,
+      ...(opts.body ? { "Content-Type": "application/json" } : {}),
+    },
+  });
+  if (res.status === 204) return null;
+  let body = null;
+  try { body = await res.json(); } catch {}
+  if (!res.ok) {
+    const err = new Error(body?.message || `HTTP ${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
+  return body;
+}
+
+/** Holt events.json. 404 = Datei gibt es noch nicht, das ist ein gültiger Startzustand. */
+async function pull() {
+  const url = `${contentsUrl()}?ref=${encodeURIComponent(cfg.branch || "main")}&_=${Date.now()}`;
+  try {
+    const j = await api(url);
+    const data = JSON.parse(b64decode(j.content));
+    state.events = (Array.isArray(data) ? data : data.events || []).map(normalisiere);
+    state.sha = j.sha;
+  } catch (e) {
+    if (e.status === 404) { state.events = []; state.sha = null; }
+    else throw e;
+  }
+  state.geladenAm = new Date().toISOString();
+  state.offline = false;
+  schreibeCache();
+}
+
+function serialisiere() {
+  const events = [...state.events].sort((a, b) =>
+    (datePart(a.start) || "9999").localeCompare(datePart(b.start) || "9999") ||
+    String(a.titel).localeCompare(String(b.titel), "de"));
+  return JSON.stringify({ schema: 1, aktualisiert: new Date().toISOString(), events }, null, 2) + "\n";
+}
+
+/**
+ * Wendet `mutator` lokal an und schiebt das Ergebnis ins Repo.
+ * Bei einem Konflikt (jemand — Handy, Discovery-Workflow — hat zwischendurch
+ * geschrieben) wird frisch geladen und dieselbe Mutation erneut angewandt,
+ * statt fremde Änderungen zu überschreiben. Mutatoren sind deshalb als
+ * Upsert/Delete über die id formuliert und wiederholbar.
+ */
+async function commit(mutator, message) {
+  if (!konfiguriert()) { melde("Kein Token — nur lesend", "err"); return false; }
+  mutator(state.events);
+  render();
+  melde("sichert …");
+
+  const schreibe = async () => {
+    const body = { message, content: b64encode(serialisiere()), branch: cfg.branch || "main" };
+    if (state.sha) body.sha = state.sha;
+    const j = await api(contentsUrl(), { method: "PUT", body: JSON.stringify(body) });
+    state.sha = j.content.sha;
+  };
+
+  try {
+    try {
+      await schreibe();
+    } catch (e) {
+      if (e.status !== 409 && e.status !== 422) throw e;
+      melde("Konflikt — lade neu …");
+      await pull();
+      mutator(state.events);
+      await schreibe();
+    }
+    state.geladenAm = new Date().toISOString();
+    state.offline = false;
+    schreibeCache();
+    melde("gesichert", "ok");
+    render();
+    return true;
+  } catch (e) {
+    state.offline = true;
+    schreibeCache();
+    melde("Fehler: " + e.message, "err");
+    render();
+    return false;
+  }
+}
+
+/* ============================================================
+   Inbox — Capture vom Handy
+   ------------------------------------------------------------
+   Der iOS-Kurzbefehl schreibt jedes Capture als eigene Datei nach `inbox/`.
+   Das ist ein einziger PUT ohne vorheriges Lesen: kein sha, kein Konflikt,
+   keine Wartezeit — die <15-Sekunden-Anforderung aus CONTEXT.md.
+   Die App saugt die Dateien beim Laden auf und räumt den Ordner leer.
+   ============================================================ */
+
+async function absorbiereInbox() {
+  if (!konfiguriert()) return;
+
+  let eintraege;
+  try {
+    eintraege = await api(`${repoUrl(inboxDir())}?ref=${encodeURIComponent(cfg.branch || "main")}&_=${Date.now()}`);
+  } catch (e) {
+    if (e.status === 404) return;   // kein Inbox-Ordner — völlig normal
+    throw e;
+  }
+  const dateien = (Array.isArray(eintraege) ? eintraege : []).filter(d => d.type === "file" && d.name.endsWith(".json"));
+  if (!dateien.length) return;
+
+  melde(`übernehme ${dateien.length} aus Inbox …`);
+  const gelesen = [];
+  for (const d of dateien) {
+    try {
+      const j = await api(d.url);
+      const roh = JSON.parse(b64decode(j.content));
+      // Die id leitet sich aus dem Dateinamen ab. Sollte das Aufräumen unten
+      // scheitern, wird beim nächsten Lauf nichts doppelt angelegt — und ein
+      // inzwischen angereichertes Event nicht auf den Capture-Stand zurückgesetzt.
+      gelesen.push({ datei: d, ev: normalisiere({ ...roh, id: roh.id || "inbox_" + d.name.replace(/\.json$/i, "") }) });
+    } catch { /* unlesbare Datei liegen lassen, statt den ganzen Lauf abzubrechen */ }
+  }
+  if (!gelesen.length) return;
+
+  const erfolg = await commit(
+    events => { for (const { ev } of gelesen) if (!events.some(e => e.id === ev.id)) events.push(ev); },
+    `${gelesen.length} Capture${gelesen.length === 1 ? "" : "s"} aus Inbox übernommen`);
+  if (!erfolg) return;
+
+  for (const { datei } of gelesen) {
+    try {
+      await api(repoUrl(datei.path), {
+        method: "DELETE",
+        body: JSON.stringify({ message: "Inbox geleert: " + datei.name, sha: datei.sha, branch: cfg.branch || "main" }),
+      });
+    } catch { /* bleibt liegen, wird beim nächsten Mal erneut versucht */ }
+  }
+  melde(`${gelesen.length} aus Inbox übernommen`, "ok");
+}
+
+/* ============================================================
+   Normalisierung — ein Event darf unvollständig sein (CONTEXT.md)
+   ============================================================ */
+
+function normalisiere(raw) {
+  const ev = {
+    id: raw.id || uid(),
+    titel: (raw.titel || "").trim(),
+    start: raw.start || "",
+    ende: raw.ende || "",
+    stadt: (raw.stadt || "").trim(),
+    venue: (raw.venue || "").trim(),
+    status: STATUS_IDS.includes(raw.status) ? raw.status : "entdeckt",
+    tags: (Array.isArray(raw.tags) ? raw.tags : String(raw.tags || "").split(","))
+      .map(t => String(t).trim().toLowerCase()).filter(Boolean),
+    preis: raw.preis === 0 || raw.preis ? Number(raw.preis) : null,
+    vvkStart: raw.vvkStart || "",
+    parkgrund: (raw.parkgrund || "").trim(),
+    quelle: (raw.quelle || "").trim(),
+    notiz: (raw.notiz || "").trim(),
+    erfasstAm: raw.erfasstAm || new Date().toISOString(),
+  };
+  ev.tags = [...new Set(ev.tags)];
+  if (!isFinite(ev.preis)) ev.preis = null;
+  return ev;
+}
+
+/* ============================================================
+   Filtern
+   ============================================================ */
+
+function sichtbareEvents() {
+  const q = filter.q.trim().toLowerCase();
+  return state.events
+    .filter(ev => {
+      if (filter.status.length && !filter.status.includes(ev.status)) return false;
+      if (filter.zeit === "kommend"   && istVergangen(ev)) return false;
+      if (filter.zeit === "vergangen" && !istVergangen(ev)) return false;
+      if (filter.tags.length && !filter.tags.every(t => ev.tags.includes(t))) return false;
+      if (q) {
+        const heu = [ev.titel, ev.stadt, ev.venue, ev.notiz, ev.quelle, ev.parkgrund, ev.tags.join(" ")]
+          .join(" ").toLowerCase();
+        if (!heu.includes(q)) return false;
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      const da = datePart(a.start), db = datePart(b.start);
+      if (!da && !db) return String(a.titel).localeCompare(String(b.titel), "de");
+      if (!da) return 1;              // Undatiertes ans Ende — es wartet auf Anreichern
+      if (!db) return -1;
+      return filter.zeit === "vergangen" ? db.localeCompare(da) : da.localeCompare(db);
+    });
+}
+
+function tagVokabular() {
+  const zaehler = new Map();
+  for (const ev of state.events) for (const t of ev.tags) zaehler.set(t, (zaehler.get(t) || 0) + 1);
+  return [...zaehler.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "de"));
+}
+
+/* ============================================================
+   Rendern
+   ============================================================ */
+
+function melde(text, kind = "") {
+  const el = $("#sync");
+  el.textContent = text;
+  el.className = kind;
+  if (kind === "ok") setTimeout(() => { if (el.textContent === text) statusZeile(); }, 2000);
+}
+
+function statusZeile() {
+  const el = $("#sync");
+  el.className = "";
+  if (!konfiguriert()) { el.textContent = "kein Token"; el.className = "err"; return; }
+  if (state.offline) { el.textContent = "offline — Cache"; el.className = "err"; return; }
+  if (state.geladenAm) {
+    const dt = new Date(state.geladenAm);
+    el.textContent = String(dt.getHours()).padStart(2, "0") + ":" + String(dt.getMinutes()).padStart(2, "0");
+  } else el.textContent = "";
+}
+
+function renderStatusChips() {
+  $("#statusChips").innerHTML = STATUSES.map(s => `
+    <button class="chip" data-status="${s.id}" aria-pressed="${filter.status.includes(s.id)}">
+      <span class="dot" style="background:var(--s-${s.id})"></span>${esc(s.label)}
+    </button>`).join("");
+}
+
+function renderTagChips() {
+  const tags = tagVokabular();
+  $("#tagChips").innerHTML = tags.length
+    ? tags.map(([t, n]) => `
+        <button class="chip" data-tag="${esc(t)}" aria-pressed="${filter.tags.includes(t)}">#${esc(t)} <span style="opacity:.6">${n}</span></button>`).join("")
+    : "";
+}
+
+function renderDatalists() {
+  const uniq = key => [...new Set(state.events.map(e => e[key]).filter(Boolean))].sort((a, b) => a.localeCompare(b, "de"));
+  $("#staedte").innerHTML = uniq("stadt").map(s => `<option value="${esc(s)}">`).join("");
+  $("#venues").innerHTML  = uniq("venue").map(s => `<option value="${esc(s)}">`).join("");
+}
+
+function karte(ev) {
+  const d = datePart(ev.start);
+  const dt = parseLocal(ev.start);
+  const { t } = splitDT(ev.start);
+  const mehrtaegig = datePart(ev.ende) && datePart(ev.ende) !== d;
+  const st = STATUSES.find(s => s.id === ev.status);
+
+  const when = d
+    ? `<b>${Number(d.slice(8, 10))}.</b><span>${MON[Number(d.slice(5, 7)) - 1].slice(0, 3)} ${WT[dt.getDay()]}</span>`
+    : `<b style="color:var(--muted)">?</b><span>offen</span>`;
+
+  const meta = [];
+  if (t) meta.push(esc(t) + " Uhr");
+  if (mehrtaegig) meta.push("bis " + Number(datePart(ev.ende).slice(8, 10)) + "." + Number(datePart(ev.ende).slice(5, 7)) + ".");
+  const ort = [ev.venue, ev.stadt].filter(Boolean).join(", ");
+  if (ort) meta.push(esc(ort));
+  if (ev.preis !== null) meta.push(fmtPreis(ev.preis));
+  if (ev.vvkStart && !istVergangen(ev)) meta.push("VVK " + esc(datePart(ev.vvkStart).split("-").reverse().slice(0, 2).join(".")));
+  const tags = ev.tags.map(t2 => `<span class="tag">#${esc(t2)}</span>`).join(" ");
+
+  return `
+    <button class="card${istVergangen(ev) ? " past" : ""}" data-id="${ev.id}" style="--st:var(--s-${ev.status})">
+      <div class="when">${when}</div>
+      <div class="titel">${esc(ev.titel) || "<i style='opacity:.6'>ohne Titel</i>"} <span class="badge">${esc(st.label)}</span></div>
+      <div class="meta">${meta.map(m => `<span>${m}</span>`).join("")} ${tags}
+        ${ev.parkgrund ? `<span style="font-style:italic">„${esc(ev.parkgrund)}"</span>` : ""}</div>
+    </button>`;
+}
+
+function render() {
+  const evs = sichtbareEvents();
+  const list = $("#list");
+
+  if (!evs.length) {
+    const leer = !state.events.length;
+    list.innerHTML = `<div class="empty">
+      <h2>${leer ? "Noch nichts erfasst" : "Nichts im Filter"}</h2>
+      <p>${leer
+        ? (konfiguriert()
+            ? "Plakat gesehen? Unten rechts auf <b>+ Erfassen</b> — Titel und Stadt genügen."
+            : "Erst Token und Daten-Repo in den Einstellungen (⚙) hinterlegen.")
+        : "Andere Status-Chips antippen oder die Suche leeren."}</p>
+    </div>`;
+  } else {
+    // Nach Monat gruppieren — undatierte Events kommen unter eine eigene Überschrift.
+    let html = "", letzterKopf = null;
+    for (const ev of evs) {
+      const d = datePart(ev.start);
+      const kopf = d ? `${MON[Number(d.slice(5, 7)) - 1]} ${d.slice(0, 4)}` : "Ohne Datum — anreichern";
+      if (kopf !== letzterKopf) { html += `<div class="month">${esc(kopf)}</div>`; letzterKopf = kopf; }
+      html += karte(ev);
+    }
+    list.innerHTML = html;
+  }
+
+  const summe = evs.reduce((s, e) => s + (e.preis || 0), 0);
+  $("#count").textContent = evs.length
+    ? `${evs.length} Event${evs.length === 1 ? "" : "s"}${summe ? " · " + fmtPreis(summe) : ""}`
+    : "";
+
+  renderStatusChips();
+  renderTagChips();
+  renderDatalists();
+  statusZeile();
+}
+
+/* ============================================================
+   ICS — VVK-Start bekommt einen eigenen Termin samt Erinnerung (CONTEXT.md)
+   ============================================================ */
+
+function icsEscape(s) {
+  return String(s ?? "").replace(/\\/g, "\\\\").replace(/;/g, "\\;")
+    .replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+}
+function falte(line) {
+  if (line.length <= 74) return line;
+  const teile = [line.slice(0, 74)];
+  let rest = line.slice(74);
+  while (rest.length > 73) { teile.push(" " + rest.slice(0, 73)); rest = rest.slice(73); }
+  if (rest) teile.push(" " + rest);
+  return teile.join("\r\n");
+}
+const stempel = () => new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+const icsZeit = s => { const { d, t } = splitDT(s); return d.replace(/-/g, "") + "T" + (t || "00:00").replace(":", "") + "00"; };
+
+function vevent(lines) {
+  return ["BEGIN:VEVENT", ...lines, "END:VEVENT"];
+}
+
+function eventVevents(ev) {
+  const out = [];
+  const d = datePart(ev.start);
+  const ort = icsEscape([ev.venue, ev.stadt].filter(Boolean).join(", "));
+  const beschreibung = icsEscape([
+    "Status: " + ev.status,
+    ev.preis !== null ? "Preis: " + fmtPreis(ev.preis) : "",
+    ev.tags.length ? "Tags: " + ev.tags.join(", ") : "",
+    ev.quelle ? "Quelle: " + ev.quelle : "",
+    ev.notiz,
+  ].filter(Boolean).join("\n"));
+
+  if (d) {
+    const { t } = splitDT(ev.start);
+    const enddatum = datePart(ev.ende) || d;
+    const zeilen = [
+      `UID:${ev.id}@leon-goes-dancing`,
+      `DTSTAMP:${stempel()}`,
+      `SUMMARY:${icsEscape(ev.titel)}`,
+    ];
+    if (t) {
+      // Terminierter Abend: Ende = Ende-Zeit, sonst pauschal +3 h.
+      const { t: te } = splitDT(ev.ende);
+      zeilen.push(`DTSTART:${icsZeit(ev.start)}`);
+      if (enddatum !== d || te) {
+        zeilen.push(`DTEND:${icsZeit(joinDT(enddatum, te || t))}`);
+      } else {
+        const [hh, mi] = t.split(":").map(Number);
+        const ende = new Date(2000, 0, 1, hh + 3, mi);
+        zeilen.push(`DTEND:${d.replace(/-/g, "")}T${String(ende.getHours()).padStart(2, "0")}${String(ende.getMinutes()).padStart(2, "0")}00`);
+      }
+    } else {
+      // Ganztägig — DTEND ist im ICS-Standard exklusiv, deshalb ein Tag drauf.
+      zeilen.push(`DTSTART;VALUE=DATE:${d.replace(/-/g, "")}`);
+      zeilen.push(`DTEND;VALUE=DATE:${addDays(enddatum, 1).replace(/-/g, "")}`);
+    }
+    if (ort) zeilen.push(`LOCATION:${ort}`);
+    if (beschreibung) zeilen.push(`DESCRIPTION:${beschreibung}`);
+    out.push(...vevent(zeilen));
+  }
+
+  if (ev.vvkStart) {
+    const { t } = splitDT(ev.vvkStart);
+    const zeilen = [
+      `UID:${ev.id}-vvk@leon-goes-dancing`,
+      `DTSTAMP:${stempel()}`,
+      `SUMMARY:VVK-Start: ${icsEscape(ev.titel)}`,
+    ];
+    if (t) {
+      zeilen.push(`DTSTART:${icsZeit(ev.vvkStart)}`, `DURATION:PT30M`);
+    } else {
+      const vd = datePart(ev.vvkStart);
+      zeilen.push(`DTSTART;VALUE=DATE:${vd.replace(/-/g, "")}`, `DTEND;VALUE=DATE:${addDays(vd, 1).replace(/-/g, "")}`);
+    }
+    zeilen.push(
+      `DESCRIPTION:${icsEscape("Tickets für " + ev.titel + (d ? " am " + fmtLang(ev.start) : ""))}`,
+      "BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:VVK-Start", "TRIGGER:-PT15M", "END:VALARM");
+    out.push(...vevent(zeilen));
+  }
+  return out;
+}
+
+function baueIcs(events) {
+  const kopf = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//leon-goes-dancing//DE", "CALSCALE:GREGORIAN"];
+  const koerper = events.flatMap(eventVevents);
+  return [...kopf, ...koerper, "END:VCALENDAR"].map(falte).join("\r\n") + "\r\n";
+}
+
+function ladeIcs(events, name) {
+  const inhalt = baueIcs(events);
+  if (!inhalt.includes("BEGIN:VEVENT")) { melde("nichts Datiertes dabei", "err"); return; }
+  const url = URL.createObjectURL(new Blob([inhalt], { type: "text/calendar;charset=utf-8" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = (name || "events").replace(/[^\w\-]+/g, "-").replace(/^-|-$/g, "").toLowerCase() + ".ics";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
+/* ============================================================
+   Weiterleiten — Text für WhatsApp & Co.
+   ============================================================ */
+
+function weiterleitText(ev) {
+  const zeilen = [ev.titel];
+  if (ev.start) zeilen.push(fmtLang(ev.start) + (datePart(ev.ende) && datePart(ev.ende) !== datePart(ev.start) ? " – " + fmtLang(ev.ende) : ""));
+  const ort = [ev.venue, ev.stadt].filter(Boolean).join(", ");
+  if (ort) zeilen.push(ort);
+  if (ev.preis !== null) zeilen.push(fmtPreis(ev.preis));
+  if (ev.vvkStart) zeilen.push("VVK ab " + fmtLang(ev.vvkStart));
+  if (ev.tags.length) zeilen.push(ev.tags.map(t => "#" + t).join(" "));
+  if (ev.quelle) zeilen.push("via " + ev.quelle);
+  return zeilen.join("\n");
+}
+
+async function kopiere(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    melde("kopiert", "ok");
+  } catch {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand("copy"); melde("kopiert", "ok"); }
+    catch { melde("Kopieren ging nicht", "err"); }
+    ta.remove();
+  }
+}
+
+/* ============================================================
+   Event-Dialog
+   ============================================================ */
+
+const dlgEvent = $("#dlgEvent");
+const formEvent = $("#formEvent");
+
+function renderStatusButtons(aktiv) {
+  $("#evStatus").innerHTML = STATUSES.map(s => `
+    <button type="button" class="chip" data-set-status="${s.id}" aria-pressed="${s.id === aktiv}">
+      <span class="dot" style="background:var(--s-${s.id})"></span>${esc(s.label)}
+    </button>`).join("");
+}
+
+function oeffneEvent(id) {
+  const ev = id ? state.events.find(e => e.id === id) : null;
+  state.editId = id || null;
+
+  formEvent.reset();
+  const f = formEvent.elements;
+  const s = splitDT(ev?.start || "");
+  f.titel.value      = ev?.titel || "";
+  f.stadt.value      = ev?.stadt || "";
+  f.venue.value      = ev?.venue || "";
+  f.startDate.value  = s.d;
+  f.startTime.value  = s.t;
+  f.endDate.value    = datePart(ev?.ende || "");
+  f.tags.value       = (ev?.tags || []).join(", ");
+  f.preis.value      = ev?.preis ?? "";
+  f.vvkStart.value   = ev?.vvkStart ? (splitDT(ev.vvkStart).t ? ev.vvkStart : ev.vvkStart + "T10:00") : "";
+  f.quelle.value     = ev?.quelle || "";
+  f.parkgrund.value  = ev?.parkgrund || "";
+  f.notiz.value      = ev?.notiz || "";
+
+  formEvent.dataset.status = ev?.status || "entdeckt";
+  renderStatusButtons(formEvent.dataset.status);
+
+  $("#evTitle").textContent = ev ? "Event" : "Erfassen";
+  // Capture bleibt schlank, Anreichern klappt auf, sobald es was anzureichern gibt.
+  $("#moreBox").open = !!(ev && (ev.venue || ev.preis !== null || ev.vvkStart || ev.quelle || ev.notiz || ev.parkgrund || s.t));
+  for (const el of ["#btnDelete", "#btnCopy", "#btnIcs"]) $(el).hidden = !ev;
+  $("#evFooterInfo").textContent = ev
+    ? "erfasst am " + new Date(ev.erfasstAm).toLocaleDateString("de-DE")
+    : "Titel und Stadt reichen — der Rest kommt später beim Anreichern.";
+
+  const vok = tagVokabular().slice(0, 12);
+  $("#tagSuggest").innerHTML = vok.map(([t]) => `<button type="button" class="chip" data-add-tag="${esc(t)}">#${esc(t)}</button>`).join("");
+
+  $("#btnSave").disabled = !konfiguriert();
+  dlgEvent.showModal();
+  if (!ev) setTimeout(() => f.titel.focus(), 60);
+}
+
+formEvent.addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = formEvent.elements;
+  const entwurf = normalisiere({
+    id: state.editId || uid(),
+    titel: f.titel.value,
+    start: joinDT(f.startDate.value, f.startTime.value),
+    ende: f.endDate.value,
+    stadt: f.stadt.value,
+    venue: f.venue.value,
+    status: formEvent.dataset.status,
+    tags: f.tags.value.split(","),
+    preis: f.preis.value === "" ? null : f.preis.value,
+    vvkStart: f.vvkStart.value,
+    quelle: f.quelle.value,
+    parkgrund: f.parkgrund.value,
+    notiz: f.notiz.value,
+    erfasstAm: state.editId ? state.events.find(x => x.id === state.editId)?.erfasstAm : undefined,
+  });
+
+  dlgEvent.close();
+  const neu = !state.editId;
+  await commit(
+    events => {
+      const i = events.findIndex(x => x.id === entwurf.id);
+      if (i >= 0) events[i] = entwurf; else events.push(entwurf);
+    },
+    `${neu ? "Erfasst" : "Angereichert"}: ${entwurf.titel || entwurf.id}`);
+});
+
+$("#evStatus").addEventListener("click", e => {
+  const btn = e.target.closest("[data-set-status]");
+  if (!btn) return;
+  formEvent.dataset.status = btn.dataset.setStatus;
+  renderStatusButtons(formEvent.dataset.status);
+  // Parkgrund gehört zu „interessiert" — dort direkt sichtbar machen.
+  if (btn.dataset.setStatus === "interessiert") $("#moreBox").open = true;
+});
+
+$("#tagSuggest").addEventListener("click", e => {
+  const btn = e.target.closest("[data-add-tag]");
+  if (!btn) return;
+  const feld = formEvent.elements.tags;
+  const vorhanden = feld.value.split(",").map(t => t.trim().toLowerCase()).filter(Boolean);
+  const tag = btn.dataset.addTag;
+  feld.value = (vorhanden.includes(tag) ? vorhanden.filter(t => t !== tag) : [...vorhanden, tag]).join(", ");
+});
+
+$("#btnDelete").addEventListener("click", async () => {
+  const ev = state.events.find(e => e.id === state.editId);
+  if (!ev || !confirm(`„${ev.titel}" wirklich löschen?`)) return;
+  dlgEvent.close();
+  await commit(events => {
+    const i = events.findIndex(x => x.id === ev.id);
+    if (i >= 0) events.splice(i, 1);
+  }, "Gelöscht: " + (ev.titel || ev.id));
+});
+
+$("#btnCopy").addEventListener("click", () => {
+  const ev = state.events.find(e => e.id === state.editId);
+  if (ev) kopiere(weiterleitText(ev));
+});
+
+$("#btnIcs").addEventListener("click", () => {
+  const ev = state.events.find(e => e.id === state.editId);
+  if (ev) ladeIcs([ev], ev.titel || "event");
+});
+
+/* ============================================================
+   Einstellungen
+   ============================================================ */
+
+const dlgSettings = $("#dlgSettings");
+const formSettings = $("#formSettings");
+
+function oeffneSettings() {
+  const f = formSettings.elements;
+  f.owner.value  = cfg.owner;
+  f.repo.value   = cfg.repo;
+  f.path.value   = cfg.path || "events.json";
+  f.branch.value = cfg.branch || "main";
+  f.token.value  = cfg.token;
+  $("#cacheInfo").textContent = state.geladenAm
+    ? `${state.events.length} Events im lokalen Cache, zuletzt geladen ${new Date(state.geladenAm).toLocaleString("de-DE")}.`
+    : "Noch nichts geladen.";
+  dlgSettings.showModal();
+}
+
+formSettings.addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = formSettings.elements;
+  cfg = {
+    owner: f.owner.value.trim(),
+    repo: f.repo.value.trim(),
+    path: (f.path.value.trim() || "events.json").replace(/^\/+/, ""),
+    branch: f.branch.value.trim() || "main",
+    token: f.token.value.trim(),
+  };
+  sichereCfg();
+  dlgSettings.close();
+  await sync();
+});
+
+$("#btnForget").addEventListener("click", () => {
+  if (!confirm("Token aus diesem Browser löschen? Die Daten im Repo bleiben.")) return;
+  cfg.token = "";
+  sichereCfg();
+  formSettings.elements.token.value = "";
+  melde("Token gelöscht", "err");
+  render();
+});
+
+/* ============================================================
+   Verdrahtung
+   ============================================================ */
+
+async function sync() {
+  if (!konfiguriert()) { melde("kein Token", "err"); render(); return; }
+  melde("lädt …");
+  try {
+    await pull();
+    melde("geladen", "ok");
+    await absorbiereInbox();
+  } catch (e) {
+    state.offline = true;
+    melde(e.status === 401 || e.status === 403 ? "Token ungültig" : "offline: " + e.message, "err");
+  }
+  render();
+}
+
+$("#list").addEventListener("click", e => {
+  const karteEl = e.target.closest(".card");
+  if (karteEl) oeffneEvent(karteEl.dataset.id);
+});
+
+$("#statusChips").addEventListener("click", e => {
+  const btn = e.target.closest("[data-status]");
+  if (!btn) return;
+  const id = btn.dataset.status;
+  filter.status = filter.status.includes(id) ? filter.status.filter(s => s !== id) : [...filter.status, id];
+  sichereFilter();
+  render();
+});
+
+$("#tagChips").addEventListener("click", e => {
+  const btn = e.target.closest("[data-tag]");
+  if (!btn) return;
+  const t = btn.dataset.tag;
+  filter.tags = filter.tags.includes(t) ? filter.tags.filter(x => x !== t) : [...filter.tags, t];
+  sichereFilter();
+  render();
+});
+
+$("#q").addEventListener("input", e => { filter.q = e.target.value; render(); });
+$("#zeit").addEventListener("change", e => { filter.zeit = e.target.value; sichereFilter(); render(); });
+
+$("#btnNew").addEventListener("click", () => oeffneEvent(null));
+$("#btnSettings").addEventListener("click", oeffneSettings);
+$("#btnIcsAll").addEventListener("click", () => {
+  const evs = sichtbareEvents();
+  if (!evs.length) { melde("nichts im Filter", "err"); return; }
+  ladeIcs(evs, "leon-goes-dancing");
+});
+
+$$("[data-close]").forEach(b => b.addEventListener("click", () => b.closest("dialog").close()));
+
+document.addEventListener("keydown", e => {
+  if (e.target.matches("input, textarea, select")) return;
+  if (e.key === "n" && !e.metaKey && !e.ctrlKey) { e.preventDefault(); oeffneEvent(null); }
+  if (e.key === "/") { e.preventDefault(); $("#q").focus(); }
+});
+
+// Wieder im Vordergrund (Handy aus der Tasche) → frischen Stand holen.
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && konfiguriert() && !dlgEvent.open && !dlgSettings.open) sync();
+});
+
+/* ---------- Start ---------- */
+ladeCfg();
+$("#q").value = filter.q;
+$("#zeit").value = filter.zeit;
+if (ladeCache()) state.offline = true;   // erst Cache zeigen, dann im Hintergrund frisch laden
+render();
+if (konfiguriert()) sync();
+else { render(); oeffneSettings(); }
+</script>
+</body>
+</html>
