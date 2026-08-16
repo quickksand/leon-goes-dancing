@@ -11,26 +11,6 @@ GitHub Contents API gelesen und geschrieben.
 - Warum so gebaut: [`docs/adr/0001`](docs/adr/0001-eigenbau-mit-github-datenhaltung.md),
   [`docs/adr/0002`](docs/adr/0002-zwei-repos-app-public-daten-privat.md)
 
-## Einrichten
-
-**1. Daten-Repo anlegen.** Ein neues, **privates** Repo, z. B. `leon-goes-dancing-data`.
-Leer lassen — die App legt `events.json` beim ersten Sichern selbst an.
-
-**2. Token erstellen.** Unter *Settings → Developer settings → Personal access tokens →
-Fine-grained tokens*:
-
-| Feld | Wert |
-|---|---|
-| Repository access | *Only select repositories* → nur das Daten-Repo |
-| Permissions | *Contents: Read and write* — sonst nichts |
-| Expiration | nach Geschmack; Ablauf bedeutet einmal neu eintragen |
-
-**3. App hosten.** In diesem Repo *Settings → Pages → Source: Deploy from a branch → `main` / root*.
-Die App liegt danach unter `https://<user>.github.io/leon-goes-dancing/`.
-
-**4. Erster Start.** Die App fragt Owner, Daten-Repo, Pfad, Branch und Token ab. Alles bleibt
-im `localStorage` des jeweiligen Geräts — nichts davon wird je committet. Auf dem Handy die
-Seite zum Home-Bildschirm hinzufügen, dann startet sie wie eine App.
 
 ## Bedienen
 
